@@ -11,7 +11,6 @@ timer
 
 import pygame, math, sys, random
 #from pathlib import Path
-
 WIDTH, HEIGHT = 800, 600
 FPS = 30
 WHITE = (255, 255, 255)
@@ -21,13 +20,15 @@ RED = (220, 80, 80)
 VERT = (0, 150, 0)
 ROSE_PALE = [(255, 200, 193), (255, 180, 193), (255, 160, 193), (255, 140, 193)]
 BORDEAUX = [(180, 50, 70),(150, 30, 60),(120, 20, 50),(90, 10, 40)]
-JAUNE = (250, 200, 0)
-PLAYING, GAME_OVER = 0, 1
+ROUGE_TERRIFIANT = [(120, 0, 0),(160, 10, 10),(200, 0, 0),(255, 40, 40),(90, 0, 0)]
+
+JAUNE = (255,255,0)
 
 
-
+impact = False
 compteur = 0
 
+b= 100
 a= 150
 LARGEUR = 400
 HAUTEUR = 300
@@ -35,89 +36,21 @@ COULEUR_FOND = (0, 0, 0)
 couleur_cercle2 = (0, 255, 0)
 clock = pygame.time.Clock()
 taille1 = random.randint(0,10)
+taille2= 1000
 pos_x = -20
 pos_x2 = -20
 d_x = 4
 d_x2 = 2
-taille2= 1000
+
 
 #ASSETS = Path(__file__).parent / "assets"
-
-
-
-# --- FONCTION FLEUR --- #
-def fleurjoueur(surface, x, y):
-    
-
-
-    num_petales = 6
-    largeur_petale, hauteur_petale = 16, 30
-
-    for n, couleur in enumerate(ROSE_PALE):
-        for i in range(num_petales):
-            angle_deg = i * (360 / num_petales)
-            angle_rad = math.radians(angle_deg)
-            petale_x = x + math.cos(angle_rad) * 20
-            petale_y = y + math.sin(angle_rad) * 20
-
-            petale_surface = pygame.Surface((largeur_petale, hauteur_petale), pygame.SRCALPHA)
-            pygame.draw.ellipse(petale_surface, couleur, (0, 0, largeur_petale, hauteur_petale))
-            petale_surface = pygame.transform.rotate(petale_surface, 90 - angle_deg + n * 20)
-            petale_rect = petale_surface.get_rect(center=(int(petale_x), int(petale_y)))
-            surface.blit(petale_surface, petale_rect)
-
-    # Centre jaune
-    pygame.draw.circle(surface, JAUNE, (x, y), 7)
-    
-def fleurennemie(surface, x, y):
-
-    num_petales = 6
-    largeur_petale, hauteur_petale = 16, 30
-
-    for n, couleur in enumerate(BORDEAUX):
-        for i in range(num_petales):
-            angle_deg = i * (360 / num_petales)
-            angle_rad = math.radians(angle_deg)
-            petale_x = x + math.cos(angle_rad) * 20
-            petale_y = y + math.sin(angle_rad) * 20
-
-            petale_surface = pygame.Surface((largeur_petale, hauteur_petale), pygame.SRCALPHA)
-            pygame.draw.ellipse(petale_surface, couleur, (0, 0, largeur_petale, hauteur_petale))
-            petale_surface = pygame.transform.rotate(petale_surface, 90 - angle_deg + n * 50)
-            petale_rect = petale_surface.get_rect(center=(int(petale_x), int(petale_y)))
-            surface.blit(petale_surface, petale_rect)
-
-    # Centre jaune
-    pygame.draw.circle(surface, JAUNE, (x, y), 7)
-
-def fleurennemie2(surface, x, y):
-
-    num_petales = 6
-    largeur_petale, hauteur_petale = 16, 30
-
-    for n, couleur in enumerate(BORDEAUX):
-        for i in range(num_petales):
-            angle_deg = i * (360 / num_petales)
-            angle_rad = math.radians(angle_deg)
-            petale_x = x + math.cos(angle_rad) * 20
-            petale_y = y + math.sin(angle_rad) * 20
-
-            petale_surface = pygame.Surface((largeur_petale, hauteur_petale), pygame.SRCALPHA)
-            pygame.draw.ellipse(petale_surface, couleur, (0, 0, largeur_petale, hauteur_petale))
-            petale_surface = pygame.transform.rotate(petale_surface, 90 - angle_deg + n * 40)
-            petale_rect = petale_surface.get_rect(center=(int(petale_x), int(petale_y)))
-            surface.blit(petale_surface, petale_rect)
-
-    # Centre jaune
-    pygame.draw.circle(surface, JAUNE, (x, y), 7)
-
 
 
 # --- SPRITES --- #
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y, speed=-8):
         super().__init__()
-        self.image = pygame.Surface((4, 12))
+        self.image = pygame.Surface((2, 16))
         self.image.fill(WHITE)
         self.rect = self.image.get_rect(midbottom=(x, y))
         self.speed = speed
@@ -128,15 +61,65 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
 
 
+class Creeper(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        # Surface transparente pour la fleur
+        self.image = pygame.Surface((80, 80), pygame.SRCALPHA)
+        self.image.fill((0, 0, 0, 0))  # fond transparent
+        self.fleurcreeper(35, 35)  # dessin centré dans la surface
+        self.rect = self.image.get_rect(topleft=(x, y))
+
+    def fleurcreeper(self, x, y):
+        num_petales = 6
+        largeur_petale, hauteur_petale = 16, 30
+    
+        for n, couleur in enumerate(ROUGE_TERRIFIANT):
+            for i in range(num_petales):
+                angle_deg = i * (360 / num_petales)
+                angle_rad = math.radians(angle_deg)
+                petale_x = x + math.cos(angle_rad) * 20
+                petale_y = y + math.sin(angle_rad) * 20
+    
+                petale_surface = pygame.Surface((largeur_petale, hauteur_petale), pygame.SRCALPHA)
+                pygame.draw.ellipse(petale_surface, couleur, (0, 0, largeur_petale, hauteur_petale))
+                petale_surface = pygame.transform.rotate(petale_surface, 90 - angle_deg + n * 50)
+                petale_rect = petale_surface.get_rect(center=(int(petale_x), int(petale_y)))
+                self.image.blit(petale_surface, petale_rect)
+    
+        # Centre noir
+        pygame.draw.circle(self.image, BLACK, (x, y), 7)
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         # Surface transparente pour la fleur
         self.image = pygame.Surface((80, 80), pygame.SRCALPHA)
         self.image.fill((0, 0, 0, 0))  # fond transparent
-        fleurennemie(self.image, 35, 35)  # dessin centré dans la surface
+        self.fleurennemie(35, 35)  # dessin centré dans la surface
         self.rect = self.image.get_rect(topleft=(x, y))
         
+    def fleurennemie(self, x, y):
+        num_petales = 6
+        largeur_petale, hauteur_petale = 16, 30
+    
+        for n, couleur in enumerate(BORDEAUX):
+            for i in range(num_petales):
+                angle_deg = i * (360 / num_petales)
+                angle_rad = math.radians(angle_deg)
+                petale_x = x + math.cos(angle_rad) * 20
+                petale_y = y + math.sin(angle_rad) * 20
+    
+                petale_surface = pygame.Surface((largeur_petale, hauteur_petale), pygame.SRCALPHA)
+                pygame.draw.ellipse(petale_surface, couleur, (0, 0, largeur_petale, hauteur_petale))
+                petale_surface = pygame.transform.rotate(petale_surface, 90 - angle_deg + n * 50)
+                petale_rect = petale_surface.get_rect(center=(int(petale_x), int(petale_y)))
+                self.image.blit(petale_surface, petale_rect)
+    
+        # Centre jaune
+        pygame.draw.circle(self.image, JAUNE, (x, y), 7)
+
+ 
         
 class Enemy2(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -144,8 +127,29 @@ class Enemy2(pygame.sprite.Sprite):
         # Surface transparente pour la fleur
         self.image = pygame.Surface((80, 80), pygame.SRCALPHA)
         self.image.fill((0, 0, 0, 0))  # fond transparent
-        fleurennemie2(self.image, 35, 35)  # dessin centré dans la surface
+        self.fleurennemie2(35, 35)  # dessin centré dans la surface
         self.rect = self.image.get_rect(topleft=(x, y))
+
+    
+    def fleurennemie2(self, x, y):
+        num_petales = 6
+        largeur_petale, hauteur_petale = 16, 30
+    
+        for n, couleur in enumerate(BORDEAUX):
+            for i in range(num_petales):
+                angle_deg = i * (360 / num_petales)
+                angle_rad = math.radians(angle_deg)
+                petale_x = x + math.cos(angle_rad) * 20
+                petale_y = y + math.sin(angle_rad) * 20
+    
+                petale_surface = pygame.Surface((largeur_petale, hauteur_petale), pygame.SRCALPHA)
+                pygame.draw.ellipse(petale_surface, couleur, (0, 0, largeur_petale, hauteur_petale))
+                petale_surface = pygame.transform.rotate(petale_surface, 90 - angle_deg + n * 40)
+                petale_rect = petale_surface.get_rect(center=(int(petale_x), int(petale_y)))
+                self.image.blit(petale_surface, petale_rect)
+    
+        # Centre jaune
+        pygame.draw.circle(self.image, JAUNE, (x, y), 7)
 
 
 
@@ -154,13 +158,36 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.Surface((80, 80), pygame.SRCALPHA)
         self.image.fill((0, 0, 0, 0))  # fond transparent
-        fleurjoueur(self.image, 35, 35)  # dessin centré dans la surface
+        self.fleurjoueur(35, 35)  # dessin centré dans la surface
         self.rect = self.image.get_rect(midbottom=(x, y))
         self.speed = speed
         self.shoot_cooldown = 250
         self.last_shot = 0
         self.lives = 3
 
+    def fleurjoueur(self, x, y):
+        num_petales = 6
+        largeur_petale, hauteur_petale = 16, 30
+    
+        for n, couleur in enumerate(ROSE_PALE):
+            for i in range(num_petales):
+                angle_deg = i * (360 / num_petales)
+                angle_rad = math.radians(angle_deg)
+                petale_x = x + math.cos(angle_rad) * 20
+                petale_y = y + math.sin(angle_rad) * 20
+    
+                petale_surface = pygame.Surface((largeur_petale, hauteur_petale), pygame.SRCALPHA)
+                pygame.draw.ellipse(petale_surface, couleur, (0, 0, largeur_petale, hauteur_petale))
+                petale_surface = pygame.transform.rotate(petale_surface, 90 - angle_deg + n * 20)
+                petale_rect = petale_surface.get_rect(center=(int(petale_x), int(petale_y)))
+                self.image.blit(petale_surface, petale_rect)
+    
+        # Centre jaune
+        pygame.draw.circle(self.image, JAUNE, (x, y), 7)
+    
+
+
+    
     def update(self, keys):
         if keys[pygame.K_LEFT]:
             self.rect.x -= self.speed
@@ -195,6 +222,10 @@ class Game:
         self.all_sprites = pygame.sprite.Group()
         self.bullets = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
+        self.creepers = pygame.sprite.Group()
+        self.apparition_creeper=0
+        self.creeper_2s= 2000
+        self.mort=0
         
         global taille1, pos_x, pos_x2
         taille1 = random.randint(0, 10)
@@ -207,17 +238,18 @@ class Game:
         #self.background = self.load_image("Fond.jpg",(WIDTH,HEIGHT))
         #self.player_img = self.load_image("Player.jpg",(60,60), WIDTH, HEIGHT)
         #self.enemy_img = self.load_image("red.jpg")
-
         # Grille d'ennemis (fleurs)
         for row in range(3):
             for col in range(5):
-                e = Enemy(60 + col * 70, 60 + row * 80)
-                self.enemies.add(e)
-                self.all_sprites.add(e)
-                f = Enemy2(410 + col * 70, 60 + row * 80)
-                self.enemies.add(f) 
-                self.all_sprites.add(f)
-
+                if (row + col) % 2 == 0:
+                    e = Enemy(60 + col * 70, 60 + row * 80)
+                    self.enemies.add(e)
+                    self.all_sprites.add(e)
+                else:
+                    f = Enemy2(60 + col * 70, 60 + row * 80)
+                    self.enemies.add(f)
+                    self.all_sprites.add(f)
+        
         self.fleet_dir = 1 
         self.fleet_speed = 1.0
         self.drop_amount = 15
@@ -258,20 +290,23 @@ class Game:
     def draw(self):
         
         self.screen.fill((0, 0+0.5* self.score, 0 +0.5* self.score))
-        global pos_x, pos_x2, taille1, taille2, a, compteur
-        if compteur:
+        global pos_x, pos_x2, taille1, taille2, a, b, compteur, impact
+        if impact:
             taille1 =  taille1 + 0.025* (taille2 -taille1)
             a = a + 0.05* (0 - a)
-        if compteur ==2:
-            taille1 = 5
-            a=150
-            compteur = 0
+            
+        if taille1 == taille2 - 5:
+            impact = False
+
+        timer= pygame.time.get_ticks()
+        b = b + 50*math.sin(timer /1000)
+        
         for i in range (2,10):
             xal = random.randint(-400,400)
             yal= random.randint(-300,300)
             
-            pygame.draw.circle(self.screen, couleur_cercle2, (i*(50*math.cos(0.05*pos_x )+ HEIGHT// 2)-400, i*pos_x2), 5*abs(math.cos(0.05*pos_x )))
-            pygame.draw.circle(self.screen, couleur_cercle2, (pos_x2, HEIGHT // 2), 40)
+            pygame.draw.circle(self.screen, (0,50,b), (i*(50*math.cos(0.05*pos_x )+ HEIGHT// 2)-400, i*pos_x2), 5*abs(math.cos(0.05*pos_x )))
+            pygame.draw.circle(self.screen, (0,50,b), (pos_x2, HEIGHT // 2), 40)
         pos_x = (pos_x + d_x) % WIDTH
         
         pos_x2 = (pos_x2 + d_x2) % WIDTH
@@ -295,7 +330,7 @@ class Game:
         pygame.display.flip()
             
     def update(self):
-        global compteur
+        global compteur, impact
         
         
         keys = pygame.key.get_pressed()
@@ -313,16 +348,37 @@ class Game:
             for e in self.enemies:
                 e.rect.y += self.drop_amount
                 
-        for e in self.enemies:
-            e.rect.x += self.fleet_dir * self.fleet_speed
-
         self.hits = pygame.sprite.groupcollide(self.enemies, self.bullets, True, True)
+        self.mort += len(self.hits)
         self.score += len(self.hits) * 10
         
+            
         
         if self.hits:
+            impact = True
+            taille1 = random.randint(0,10)
+            a = 150
+            
             compteur+=1
 
+        
+        timer=pygame.time.get_ticks()
+        if self.mort > 5 and timer - self.apparition_creeper> self.creeper_2s:
+                c = Creeper(random.randint(0, 800), 0)
+                self.creepers.add(c)
+                self.all_sprites.add(c)
+                self.apparition_creeper= timer
+
+        
+        for c in self.creepers:
+            c.rect.y+= 5* self.fleet_speed
+            if c.rect.colliderect(self.player.rect):
+                self.player.lives -= 1
+                self.state = GAME_OVER
+            if c.rect.top > HEIGHT:  
+                c.kill()  
+
+        
         for e in self.enemies:
             if e.rect.bottom >= HEIGHT - 40:
                 self.state = GAME_OVER
@@ -339,3 +395,4 @@ class Game:
 
 if __name__ == "__main__":
     Game().run()
+
