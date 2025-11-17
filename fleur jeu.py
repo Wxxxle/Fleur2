@@ -9,6 +9,7 @@ timer
 @author: cdelor
 """
 
+
 import pygame, math, sys, random
 #from pathlib import Path
 WIDTH, HEIGHT = 800, 600
@@ -28,20 +29,23 @@ Victoire = False
 impact = False
 compteur = 0
 
-b= 100
+d= 100
 a= 150
 LARGEUR = 400
 HAUTEUR = 300
 COULEUR_FOND = (0, 0, 0)
 couleur_cercle2 = (0, 255, 0)
 clock = pygame.time.Clock()
-taille1 = random.randint(0,10)
+taille1 = 1
 taille2= 1000
 pos_x = -20
 pos_x2 = -20
 d_x = 4
-d_x2 = 2
-
+d_x2 = 6
+num_petales = 6
+largeur_petale, hauteur_petale = 16, 30
+couleurvictoire = (120, 0, 0)
+    
 
 #ASSETS = Path(__file__).parent / "assets"
 
@@ -73,8 +77,8 @@ class Bullet(pygame.sprite.Sprite):
         pulse = 20 + 15 * abs(math.sin(t))
         color = (200 + pulse, 200 + pulse, 200 + pulse, 120 + pulse)
         halo_temp = pygame.Surface((20, 36), pygame.SRCALPHA)
-        pygame.draw.rect(halo_temp,color,(4, 0, 2, 26))
-        self.halo = self.bloom(halo_temp, radius=4, passes=2)
+        pygame.draw.rect(halo_temp,color,(8, 6, 4, 24))
+        self.halo = self.bloom(halo_temp, radius=3, passes=2)
         self.halo_rect = self.halo.get_rect(center=self.rect.center)
 
 
@@ -91,9 +95,6 @@ class Creeper(pygame.sprite.Sprite):
 
 
     def fleurcreeper(self, x, y):
-        num_petales = 6
-        largeur_petale, hauteur_petale = 16, 30
-       
         for n, couleur in enumerate(ROUGE_TERRIFIANT):
             for i in range(num_petales):
                 angle_deg = i * (360 / num_petales)
@@ -121,11 +122,11 @@ class Creeper(pygame.sprite.Sprite):
     def update(self, *_):
         
         t = pygame.time.get_ticks() * 0.01
-        pulse = 20 + 15 * abs(math.sin(t))
+        pulse = 10 + 25 * abs(math.sin(t))
         color = (255, 10 + pulse, 40 + pulse, 120 + pulse)
         halo_temp = pygame.Surface((160,160), pygame.SRCALPHA)
-        pygame.draw.circle(halo_temp, color, (80,80), 60 + int(pulse)//4)
-        self.halo_creeper= self.bloom(halo_temp, radius=4, passes=2)
+        pygame.draw.circle(halo_temp, color, (75,75), 40 + int(pulse)//4)
+        self.halo_creeper= self.bloom(halo_temp, radius=7, passes=10)
         self.halo_creeper_rect = self.halo_creeper.get_rect(center=self.rect.center)
 
 
@@ -139,9 +140,6 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=(x, y))
         
     def fleurennemie(self, x, y):
-        num_petales = 6
-        largeur_petale, hauteur_petale = 16, 30
-    
         for n, couleur in enumerate(BORDEAUX):
             for i in range(num_petales):
                 angle_deg = i * (360 / num_petales)
@@ -171,9 +169,7 @@ class Enemy2(pygame.sprite.Sprite):
 
     
     def fleurennemie2(self, x, y):
-        num_petales = 6
-        largeur_petale, hauteur_petale = 16, 30
-    
+
         for n, couleur in enumerate(BORDEAUX):
             for i in range(num_petales):
                 angle_deg = i * (360 / num_petales)
@@ -267,7 +263,6 @@ class Game:
         self.mort=0
         
         global taille1, pos_x, pos_x2
-        taille1 = random.randint(0, 10)
         pos_x = -20
         pos_x2 = -20
 
@@ -279,7 +274,7 @@ class Game:
         #self.enemy_img = self.load_image("red.jpg")
         # Grille d'ennemis (fleurs)
         for row in range(3):
-            for col in range(5):
+            for col in range(10):
                 if (row + col) % 2 == 0:
                     e = Enemy(60 + col * 70, 60 + row * 80)
                     self.enemies.add(e)
@@ -329,26 +324,28 @@ class Game:
     def draw(self):
         
         self.screen.fill((0, 0+0.005* self.score, 0 +0.05* self.score))
-        global pos_x, pos_x2, taille1, taille2, a, b, compteur, impact
+        global pos_x, pos_x2, taille1, taille2, a, d, compteur, impact, Victoire
         if impact:
             taille1 =  taille1 + 0.025* (taille2 -taille1)
             a = a + 0.05* (0 - a)
             
-        if taille1 == taille2 - 5:
+        if taille1 >= (taille2 - 200):
             impact = False
 
         timer= pygame.time.get_ticks()
-        b = b + 50*math.sin(timer /1000)
+        d = int(abs( 150*math.sin(timer /1000)))
         
         for i in range (2,10):
             xal = random.randint(-400,400)
-            yal= random.randint(-300,300)
+            yal= random.randint(-300,300) 
             
-            pygame.draw.circle(self.screen, (0,50,b), (i*(50*math.cos(0.05*pos_x )+ HEIGHT// 2)-400, i*pos_x2), 5*abs(math.cos(0.05*pos_x )))
-            pygame.draw.circle(self.screen, (0,50,b), (pos_x2, HEIGHT // 2), 40)
+            pygame.draw.circle(self.screen, (min(255,d),0,0), (i*(50*math.cos(0.05*pos_x )+ HEIGHT// 2)-400, i*pos_x2), 5*abs(math.cos(0.05*pos_x )))
+            pygame.draw.circle(self.screen, (min(255,d),0,0), (pos_x2, HEIGHT // 2), 40)
         pos_x = (pos_x + d_x) % WIDTH
         pos_x2 = (pos_x2 + d_x2) % WIDTH
-        pygame.draw.circle(self.screen, (0,0,a,255 -a), ( WIDTH//2, HEIGHT// 2),taille1 )
+        cercletempo = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        pygame.draw.circle(cercletempo, (min(3*a,a), 0, 0, a), (WIDTH//2, HEIGHT//2), taille1)
+        self.screen.blit(cercletempo, (0, 0))
         
         for b in self.bullets:
             self.screen.blit(b.halo, b.halo_rect)
@@ -368,7 +365,7 @@ class Game:
         self.screen.blit(lives_surf, (WIDTH - 120, 10))
 
         if self.state == GAME_OVER:
-            time = pygame.time.get_ticks() / 100
+            time = pygame.time.get_ticks() / 50
             background_surf = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
             background_surf.fill((0, 0, 0, min(150, 20 *time)))
             self.screen.blit(background_surf, (0, 0))
@@ -380,16 +377,35 @@ class Game:
                 msg = grande_police.render("VICTOIRE", True, (min(255, time),min(255, time),min(255, time)) )
                 msg2 = petite_police.render("R pour recommencer", True, (max(0,min(255, time-15)),max(0,min(255, time-15)),max(0,min(255, time-15))) )
                 rect = msg.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-                rect2 = msg2.get_rect(center=(WIDTH // 2, HEIGHT // 2)+ 30)
+                rect2 = msg2.get_rect(center=(WIDTH // 2, (HEIGHT // 2)+ 30))
+                
+                for i in range(20):
+                    
+                    petale_surface = pygame.Surface((largeur_petale, hauteur_petale), pygame.SRCALPHA)
+                    pygame.draw.ellipse(petale_surface, couleurvictoire, (0, 0, largeur_petale, hauteur_petale))
+                    
+                    angle_deg = i * 360 / num_petales   
+                    angle_rad = math.radians(angle_deg)
+                    
+                    petale_x = math.cos(angle_rad) * 40 + 30 
+                    petale_y = math.sin(angle_rad) * 40 + 10
+                    
+                    petale_surface_rot = pygame.transform.rotate(petale_surface, -angle_deg)
+                    
+                    petale_rect = petale_surface_rot.get_rect(center=(int(petale_x), int(petale_y)))
+                
+                self.screen.blit(petale_surface_rot, petale_rect)
                 self.screen.blit(msg, rect)
                 self.screen.blit(msg2, rect2)
+                
+                
             else:      
                 msg1 = grande_police.render("Défaite", True, (min(255, time),min(255, time),min(255, time)) )
                 msg2 = petite_police.render(f"Score: {self.score}", True, (max(0,min(255, time-15)),max(0,min(255, time-15)),max(0,min(255, time-15))) )
                 msg3 = petite_police.render("R pour recommencer", True, (max(0,min(255, time-30)),max(0,min(255, time-30)),max(0,min(255, time-30))) )
                 rect1 = msg1.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-                rect2 = msg2.get_rect(center=(WIDTH // 2, (HEIGHT // 2)+ 30))
-                rect3 = msg3.get_rect(center=(WIDTH // 2, (HEIGHT // 2)+ 45))
+                rect2 = msg2.get_rect(center=(WIDTH // 2, ((HEIGHT // 2)+ 30)))
+                rect3 = msg3.get_rect(center=(WIDTH // 2, ((HEIGHT // 2)+ 45)))
                 self.screen.blit(msg1, rect1)
                 self.screen.blit(msg2, rect2)
                 self.screen.blit(msg3, rect3)
@@ -398,7 +414,7 @@ class Game:
         pygame.display.flip()
             
     def update(self):
-        global compteur, impact
+        global compteur, Victoire, taille1, a
         
         keys = pygame.key.get_pressed()
         if self.state != PLAYING:
@@ -420,10 +436,10 @@ class Game:
         self.score += len(self.hits) * 10
         
             
-        
+        global impact 
         if self.hits:
             impact = True
-            taille1 = random.randint(0,10)
+            taille1 = 1
             a = 150
             
             compteur+=1
